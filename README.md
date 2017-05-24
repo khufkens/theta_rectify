@@ -27,4 +27,4 @@ Visual comparison between my results and those of [Regen's python script](http:/
 
 ## Requirements
 
-The script depends on a running copy of exiftools, imagemagick and POVRay.
+The script depends on a running copy of exiftools, imagemagick and POVRay. These tools are commonly available in most Linux distros, and can be installed on OSX using tools such as homebrew. I lack a MS Windows system, but the script should be easily adjusted to cover similar functionality.

@@ -1,6 +1,6 @@
 # theta_rectify
 
-This small bash script (theta_rectify.sh) rectifies (levels the horizon) in Theta S spherical images. This is an alternative implementation to the [THETA EXIF Library](https://github.com/regen100/thetaexif) by [Regen](https://github.com/regen100). I use his cute Lama test images for reference. All credit for the funky images go to Regen.
+This is a small bash script which rectifies (levels the horizon) in Theta S spherical images using the internal pitch and roll values stored in the EXIF data. This is an alternative implementation to the [THETA EXIF Library](https://github.com/regen100/thetaexif) by [Regen](https://github.com/regen100). I use his cute Lama test images for reference. All credit for the funky images go to Regen.
 
 ## Install
 

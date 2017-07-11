@@ -8,19 +8,19 @@
 while [ ${#} -gt 0 ]
 do
   # get the filename without the extension
-  noextension=`echo $1 | sed 's/\(.*\)\..*/\1/'`
+  noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
 
   # grab the width and height of the images
-  height=`exiftool $1 | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1`
-  width=`exiftool $1 | grep "^Image Width" | cut -d':' -f2 | sed 's/ //g' | head -n1`
+  height=`exiftool "$1" | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1`
+  width=`exiftool "$1" | grep "^Image Width" | cut -d':' -f2 | sed 's/ //g' | head -n1`
 
   # grab pitch roll
-  roll=`exiftool $1 | grep "Roll" | cut -d':' -f2 | sed 's/ //g' | head -n1`
-  pitch=`exiftool $1 | grep "Pitch" | cut -d':' -f2 | sed 's/ //g' | head -n1`
+  roll=`exiftool "$1" | grep "Roll" | cut -d':' -f2 | sed 's/ //g' | head -n1`
+  pitch=`exiftool "$1" | grep "Pitch" | cut -d':' -f2 | sed 's/ //g' | head -n1`
   pitch=$(bc <<< "$pitch * -1")
 
   # flip the image horizontally
-  convert -flop $1 tmp.jpg
+  convert -flop "$1" tmp.jpg
 
   # create povray script with correct image parameters
   cat <<EOF > tmp.pov
@@ -61,10 +61,14 @@ sphere {
 EOF
 
   # execute povray script and rename file
-  povray +W$width +H$height -D +fj tmp.pov +O${noextension}_rectified.jpg
+  destfile="${noextension}_rectified.jpg"
+  povray +W$width +H$height -D +fj tmp.pov "+O$destfile"
 
   # remove temporary files / clean up
   rm tmp.jpg
   rm tmp.pov
+
+  # copy original metadata to dest, removing the corrections that have just been made
+  exiftool -overwrite_original -TagsFromFile "$1" -PosePitchDegrees= -PoseRollDegrees= "$destfile" 
   shift
 done

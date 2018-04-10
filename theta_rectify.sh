@@ -29,8 +29,9 @@ do
   destfile="${noextension}_rectified.jpg"
 
   if [ -e $destfile -a $FORCE -ne 1 ]; then
-    echo "A converted file already exists. Use -f to force."
-    exit 2
+    echo "Converted file ${destfile} already exists. Skipping. Use -f to force."
+    shift
+    continue
   fi
 
 

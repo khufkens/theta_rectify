@@ -10,6 +10,9 @@ do
   # get the filename without the extension
   noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
 
+  # generate a temp name so that parallel runs don't clobber each other
+  TMP_ROOT="${noextension}.$RANDOM.theta_rectify.tmp"
+
   # grab the width and height of the images
   height=`exiftool "$1" | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1`
   width=`exiftool "$1" | grep "^Image Width" | cut -d':' -f2 | sed 's/ //g' | head -n1`
@@ -20,10 +23,10 @@ do
   pitch=$(bc <<< "$pitch * -1")
 
   # flip the image horizontally
-  convert -flop "$1" tmp.jpg
+  convert -flop "$1" $TMP_ROOT.jpg
 
   # create povray script with correct image parameters
-  cat <<EOF > tmp.pov
+  cat <<EOF > $TMP_ROOT.pov
 // Equirectangular Panorama Render
 // bare bones script
 
@@ -46,7 +49,7 @@ sphere {
   texture {
     pigment {
       image_map {
-        jpeg "tmp.jpg"
+        jpeg "$TMP_ROOT.jpg"
         interpolate 2 // smooth it
         once   // don't tile image, just one copy  
         map_type 1
@@ -62,11 +65,11 @@ EOF
 
   # execute povray script and rename file
   destfile="${noextension}_rectified.jpg"
-  povray +W$width +H$height -D +fj tmp.pov "+O$destfile"
+  povray +W$width +H$height -D +fj $TMP_ROOT.pov "+O$destfile"
 
   # remove temporary files / clean up
-  rm tmp.jpg
-  rm tmp.pov
+  rm $TMP_ROOT.jpg
+  rm $TMP_ROOT.pov
 
   # copy original metadata to dest, removing the corrections that have just been made
   exiftool -overwrite_original -TagsFromFile "$1" -PosePitchDegrees= -PoseRollDegrees= "$destfile" 

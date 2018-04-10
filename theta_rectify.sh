@@ -7,6 +7,11 @@
 
 while [ ${#} -gt 0 ]
 do
+  if [ ! -e $1 ]; then
+    echo "File $1 not found."
+    exit 2
+  fi
+
   # get the filename without the extension
   noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
 

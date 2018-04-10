@@ -5,6 +5,13 @@
 # Should work on most Linux installs and on
 # OSX using homebrew installs or similar
 
+FORCE=0
+if [ $1 = "-f" ]; then
+  FORCE=1
+  echo "-f passed; will clobber extant files."
+  shift
+fi
+
 while [ ${#} -gt 0 ]
 do
   if [ ! -e $1 ]; then
@@ -17,6 +24,15 @@ do
 
   # generate a temp name so that parallel runs don't clobber each other
   TMP_ROOT="${noextension}.$RANDOM.theta_rectify.tmp"
+
+  # calculate destination name and check for existence before proceeding
+  destfile="${noextension}_rectified.jpg"
+
+  if [ -e $destfile -a $FORCE -ne 1 ]; then
+    echo "A converted file already exists. Use -f to force."
+    exit 2
+  fi
+
 
   # grab the width and height of the images
   height=`exiftool "$1" | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1`

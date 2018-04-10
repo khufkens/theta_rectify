@@ -23,7 +23,7 @@ do
   noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
 
   # generate a temp name so that parallel runs don't clobber each other
-  TMP_ROOT="${noextension}.$RANDOM.theta_rectify.tmp"
+  TMP_ROOT="${noextension}_${RANDOM}_theta_rectify.tmp"
 
   # calculate destination name and check for existence before proceeding
   destfile="${noextension}_rectified.jpg"

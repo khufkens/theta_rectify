@@ -5,6 +5,10 @@
 # Should work on most Linux installs and on
 # OSX using homebrew installs or similar
 
+# change the internal field separator to allow spaces in filenames
+SAVEIFS=$IFS 
+IFS=$(echo -en "\n\b")
+
 FORCE=0
 if [ $1 = "-f" ]; then
   FORCE=1
@@ -67,22 +71,22 @@ camera {
 // create a sphere shape
 sphere {
   // center of sphere
-  <0,0,0>, 1       
+  <0,0,0>, 1
   texture {
     pigment {
       image_map {
         jpeg "$TMP_ROOT.jpg"
         interpolate 2 // smooth it
-        once   // don't tile image, just one copy  
+        once   // don't tile image, just one copy
         map_type 1
-      }     
+      }
     }
     rotate x * $roll   //Tilt up (+) or down (-) or PITCH
     rotate y * 0       //shift left (+) or right (-)
     rotate z * $pitch  //Rotate CCW (+) or CW (-) or ROLL
-    finish { ambient 1 }      
+    finish { ambient 1 }
   }
-}                                   
+}
 EOF
 
   # execute povray script and rename file
@@ -94,6 +98,9 @@ EOF
   rm $TMP_ROOT.pov
 
   # copy original metadata to dest, removing the corrections that have just been made
-  exiftool -overwrite_original -TagsFromFile "$1" -PosePitchDegrees= -PoseRollDegrees= "$destfile" 
+  exiftool -overwrite_original -TagsFromFile "$1" -PosePitchDegrees= -PoseRollDegrees= "$destfile"
   shift
 done
+
+# Restore default shell IFS
+IFS=$SAVEIFS

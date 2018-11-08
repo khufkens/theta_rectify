@@ -1,10 +1,19 @@
 #!/bin/bash
 #
-# Automatically levels Theta S spherical images
+# Automatically levels Ricoh Theta spherical images
 # depends on exiftools / imagemagick and POVRay
 # Should work on most Linux installs and on
 # OSX using homebrew installs or similar
 
+# Print usage
+HELP="Usage: theta_rectify.sh [-f] FILE [FILE ...]
+  Automatically levels Ricoh Theta spherical images"
+if [ $# == 0 ] || [ $1 = "--help" ] ; then
+    echo "$HELP"
+    exit 1;
+fi
+
+# check if the user requested us to overwrite previously processed images
 FORCE=0
 if [ $1 = "-f" ]; then
   FORCE=1
@@ -12,6 +21,7 @@ if [ $1 = "-f" ]; then
   shift
 fi
 
+# Process each file passed on the command line
 while [ ${#} -gt 0 ]
 do
   if [ ! -e $1 ]; then
@@ -22,7 +32,7 @@ do
   # get the filename without the extension
   noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
 
-  # generate a temp name so that parallel runs dont clobber each other
+  # generate a temp name so that parallel runs don't clobber each other
   TMP_ROOT="${RANDOM}_theta_rectify.tmp"
 
   # calculate destination name and check for existence before proceeding
@@ -37,7 +47,7 @@ do
   # extract metadata from image
   EXIF=$(exiftool "$1")
 
-  # grab the width and height of the images
+  # grab the width and height of the images from previously extracted metadata
   height=`echo "$EXIF" | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1`
   width=`echo "$EXIF" | grep "^Image Width" | cut -d':' -f2 | sed 's/ //g' | head -n1`
 
@@ -87,7 +97,7 @@ sphere {
 }
 EOF
 
-  # execute povray script and rename file
+  # execute povray script, save output to temporary file and rename it
   TMP_DEST=${TMP_ROOT}_rectified.jpg
   povray +W$width +H$height -D +fj $TMP_ROOT.pov "+O$TMP_DEST"
   mv "$TMP_DEST" "$destfile"

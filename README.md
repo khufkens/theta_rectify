@@ -21,9 +21,8 @@ Download, fork or copy paste the script to your machine and make it executable.
 
 The above command will rectify the image.jpg file and output a new file called image_rectified.jpg.
 
-![](https://i1.wp.com/www.khufkens.com/wp-content/uploads/2017/05/equirectangular.jpg?zoom=2&w=525)
-
-![](https://i1.wp.com/www.khufkens.com/wp-content/uploads/2017/05/equirectangular_rectified.jpg?zoom=2&w=525)
+![](https://www.khufkens.com/uploads/2017/05/equirectangular.jpg?zoom=2&w=525)
+![](https://www.khufkens.com/uploads/2017/05/equirectangular_rectified.jpg?zoom=2&w=525)
 
 Visual comparison between my results and those of [Regen's python script](http://www.regentechlog.com/2014/06/26/python-thetaexif/) show good correspondence.
 

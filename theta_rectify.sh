@@ -8,14 +8,14 @@
 # Print usage
 HELP="Usage: theta_rectify.sh [-f] FILE [FILE ...]
   Automatically levels Ricoh Theta spherical images"
-if [ $# == 0 ] || [ $1 = "--help" ] ; then
+if [ "${#}" == 0 ] || [ "$1" = "--help" ] ; then
     echo "$HELP"
     exit 1;
 fi
 
 # check if the user requested us to overwrite previously processed images
 FORCE=0
-if [ $1 = "-f" ]; then
+if [ "$1" = "-f" ]; then
   FORCE=1
   echo "-f passed; will clobber extant files."
   shift
@@ -24,7 +24,7 @@ fi
 # Process each file passed on the command line
 while [ ${#} -gt 0 ]
 do
-  if [ ! -e $1 ]; then
+  if [ ! -e "$1" ]; then
     echo "File $1 not found."
     exit 2
   fi
@@ -38,7 +38,7 @@ do
   # calculate destination name and check for existence before proceeding
   destfile="${noextension}_rectified.jpg"
 
-  if [ -e $destfile -a $FORCE -ne 1 ]; then
+  if [ -e "$destfile" -a $FORCE -ne 1 ]; then
     echo "Converted file ${destfile} already exists. Skipping. Use -f to force."
     shift
     continue

@@ -37,8 +37,8 @@ do
   fi
 
   # get the filename without the extension
-  BASENAME=`basename $1`
-  noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
+  BASENAME=`basename "$1"`
+  noextension=$(echo "$1" | sed 's/\(.*\)\..*/\1/')
 
   # generate a temp name so that parallel runs don't clobber each other
   TMP_ROOT="$TMP_DIR/${BASENAME}_${RANDOM}_theta_rectify.tmp"
@@ -56,20 +56,20 @@ do
   EXIF=$(exiftool "$1")
 
   # grab the width and height of the images from previously extracted metadata
-  height=`echo "$EXIF" | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1`
-  width=`echo "$EXIF" | grep "^Image Width" | cut -d':' -f2 | sed 's/ //g' | head -n1`
+  height=$(echo "$EXIF" | grep "^Image Height" | cut -d':' -f2 | sed 's/ //g' | head -n1)
+  width=$(echo "$EXIF" | grep "^Image Width" | cut -d':' -f2 | sed 's/ //g' | head -n1)
 
   # grab pitch roll
-  roll=`echo "$EXIF" | grep "Roll" | cut -d':' -f2 | sed 's/ //g' | head -n1`
-  pitch=`echo "$EXIF" | grep "Pitch" | cut -d':' -f2 | sed 's/ //g' | head -n1`
+  roll=$(echo "$EXIF" | grep "Roll" | cut -d':' -f2 | sed 's/ //g' | head -n1)
+  pitch=$(echo "$EXIF" | grep "Pitch" | cut -d':' -f2 | sed 's/ //g' | head -n1)
   pitch=$(bc <<< "$pitch * -1")
 
   # flip the image horizontally
   echo "Preparing image for transforms..."
-  convert -define png:compression-level=1 -flop "$1" $TMP_ROOT.png
+  convert -define png:compression-level=1 -flop "$1" "$TMP_ROOT".png
 
   # create povray script with correct image parameters
-  cat <<EOF > $TMP_ROOT.pov
+  cat <<EOF > "$TMP_ROOT".pov
 #version 3.7;
 // Equirectangular Panorama Render
 // bare bones script
@@ -115,20 +115,20 @@ EOF
   povray \
     +wt1 `# use 1 thread; many threads thrashes on small files` \
     +V `# give descriptive output` \
-    +W$width +H$height `# define image dimensions` \
+    +W"$width" +H"$height" `# define image dimensions` \
     -D  `# don't display in-progress render` \
     +fN `#write out to PNG` \
-    $TMP_ROOT.pov `# use TMP_ROOT.pov as input` \
+    "$TMP_ROOT".pov `# use TMP_ROOT.pov as input` \
     +O"$TMP_DEST" `# write to temp destination`
 
   # perform final JPEG conversion at quality 90.
-  convert -quality 90 $TMP_DEST $destfile
+  convert -quality 90 "$TMP_DEST" "$destfile"
 
   # remove temporary files / clean up
   echo "Cleaning up temporary files..."
-  rm -v $TMP_DEST
-  rm -v $TMP_ROOT.png
-  rm -v $TMP_ROOT.pov
+  rm -v "$TMP_DEST"
+  rm -v "$TMP_ROOT".png
+  rm -v "$TMP_ROOT".pov
 
   # copy original metadata to dest, removing the corrections that have just been made
   echo "Pasting original tags..."

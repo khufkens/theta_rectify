@@ -29,11 +29,19 @@ do
     exit 2
   fi
 
+  # create the theta_rectifier tmp dir
+  TMP_DIR="/tmp/theta_rectifier"
+  if [ ! -d /tmp/theta_rectifier ]; then
+    echo "Making temporary directory for rectifier working files at: $TMP_DIR"
+    mkdir -v $TMP_DIR
+  fi
+
   # get the filename without the extension
+  BASENAME=`basename $1`
   noextension=`echo "$1" | sed 's/\(.*\)\..*/\1/'`
 
   # generate a temp name so that parallel runs don't clobber each other
-  TMP_ROOT="${RANDOM}_theta_rectify.tmp"
+  TMP_ROOT="$TMP_DIR/${BASENAME}_${RANDOM}_theta_rectify.tmp"
 
   # calculate destination name and check for existence before proceeding
   destfile="${noextension}_rectified.jpg"
@@ -57,12 +65,16 @@ do
   pitch=$(bc <<< "$pitch * -1")
 
   # flip the image horizontally
-  convert -flop "$1" $TMP_ROOT.jpg
+  echo "Preparing image for transforms..."
+  convert -define png:compression-level=1 -flop "$1" $TMP_ROOT.png
 
   # create povray script with correct image parameters
   cat <<EOF > $TMP_ROOT.pov
+#version 3.7;
 // Equirectangular Panorama Render
 // bare bones script
+
+global_settings { assumed_gamma 2.2 }
 
 // camera settings
 camera {
@@ -83,7 +95,7 @@ sphere {
   texture {
     pigment {
       image_map {
-        jpeg "$TMP_ROOT.jpg"
+        png "$TMP_ROOT.png"
         interpolate 2 // smooth it
         once   // don't tile image, just one copy
         map_type 1
@@ -97,16 +109,32 @@ sphere {
 }
 EOF
 
-  # execute povray script, save output to temporary file and rename it
-  TMP_DEST=${TMP_ROOT}_rectified.jpg
-  povray +W$width +H$height -D +fj $TMP_ROOT.pov "+O$TMP_DEST"
-  mv "$TMP_DEST" "$destfile"
+  # execute povray script and rename file
+  TMP_DEST=${TMP_ROOT}_povray-out.png
+  echo "Invoking POV-Ray to apply transformations..."
+  povray \
+    +wt1 `# use 1 thread; many threads thrashes on small files` \
+    +V `# give descriptive output` \
+    +W$width +H$height `# define image dimensions` \
+    -D  `# don't display in-progress render` \
+    +fN `#write out to PNG` \
+    $TMP_ROOT.pov `# use TMP_ROOT.pov as input` \
+    +O"$TMP_DEST" `# write to temp destination`
+
+  # perform final JPEG conversion at quality 90.
+  convert -quality 90 $TMP_DEST $destfile
 
   # remove temporary files / clean up
-  rm $TMP_ROOT.jpg
-  rm $TMP_ROOT.pov
+  echo "Cleaning up temporary files..."
+  rm -v $TMP_DEST
+  rm -v $TMP_ROOT.png
+  rm -v $TMP_ROOT.pov
 
   # copy original metadata to dest, removing the corrections that have just been made
-  exiftool -overwrite_original -TagsFromFile "$1" -PosePitchDegrees= -PoseRollDegrees= "$destfile"
+  echo "Pasting original tags..."
+  exiftool -overwrite_original -a -m -TagsFromFile "$1" -all:all \
+    -PosePitchDegrees=0 -PoseRollDegrees=0 \
+    -ProcessingSoftware="theta_rectify.sh: git version" \
+    "$destfile"
   shift
 done
